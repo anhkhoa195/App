@@ -1,0 +1,28 @@
+.wrapAll {
+  min-height: 100vh;
+  text-align: center;
+  align-items: center;
+}
+
+.welcome {
+  display: flex;
+  justify-content: space-around;
+}
+
+.App {
+  text-align: center;
+}
+
+nav {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  min-height: 10vh;
+  background: black;
+  color: #ffffff;
+}
+
+.nav-links {
+  width: 50%;
+
+}
