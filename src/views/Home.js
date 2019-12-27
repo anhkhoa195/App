@@ -7,49 +7,45 @@ import { BrowserRouter as Router, Switch, Route, Link, Redirect } from "react-ro
 import { RouteComponentProps } from "react-router";
 import axios from "axios";
 class Home extends React.Component<RouteComponentProps> {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      error: null,
-      dataRes: [
-        { id: 1, name: "Wasif", age: 21, email: "wasif@email.com", position: "", phone: "" },
-        { id: 2, name: "Ali", age: 19, email: "ali@email.com", position: "", phone: "" },
-        { id: 3, name: "Saad", age: 16, email: "saad@email.com", position: "", phone: "" },
-        { id: 4, name: "Asad", age: 25, email: "asad@email.com", position: "", phone: "" }
-      ],
-      tableHeader: ["id", "name", "age", "email", "position", "phone", "edit", "delete"]
-    };
-  }
-  componentDidMount() {
-    const apiUrl = "http://localhost:3000/products";
-    axios
-      .post(apiUrl)
-      .then(res =>
-        res.json().then(
-          result => {
-            this.setState({
-              dataRes: result
-            });
-          },
-          error => {
-            this.setState({ error });
-          }
-        )
-      )
-      .catch(err => console.log(err));
-  }
-  addNew() {
-    this.props.history.push("/user");
-  }
-  render() {
-    return (
-      <div className="App">
-        <h1>Customer List</h1>
-        <Button variant={"contained"} label={"Add new"} color={"primary"} onClick={this.addNew}></Button>
-        <Table dataRes={this.state.dataRes} tableHeader={this.state.tableHeader} history={this.props.history} />
-      </div>
-    );
-  }
+    constructor(props) {
+        super(props);
+        this.state = {
+            error: null,
+            dataRes: [
+                { id: 1, name: "Wasif", age: 21, email: "wasif@email.com", position: "", phone: "" },
+                { id: 2, name: "Ali", age: 19, email: "ali@email.com", position: "", phone: "" },
+                { id: 3, name: "Saad", age: 16, email: "saad@email.com", position: "", phone: "" },
+                { id: 4, name: "Asad", age: 25, email: "asad@email.com", position: "", phone: "" }
+            ],
+            tableHeader: ["id", "name", "age", "email", "position", "phone", "edit", "delete"]
+        };
+    }
+    componentDidMount() {
+        const apiUrl = "http://localhost:4000/products";
+        axios
+            .get(apiUrl)
+            .then(res => {
+                this.setState({
+                    dataRes: res.data
+                });
+            },
+                error => {
+                    this.setState({ error });
+                }
+            )
+            .catch(err => console.log(err));
+    }
+    addNew() {
+        this.props.history.push("/user");
+    }
+    render() {
+        return (
+            <div className="App">
+                <h1>Customer List</h1>
+                <Button variant={"contained"} label={"Add new"} color={"primary"} onClick={this.addNew}></Button>
+                <Table dataRes={this.state.dataRes} tableHeader={this.state.tableHeader} history={this.props.history} />
+            </div>
+        );
+    }
 }
 export default Home;
