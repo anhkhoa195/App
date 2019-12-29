@@ -3,99 +3,126 @@ import "../styles/table.css";
 import { BrowserRouter, Link, Switch, Route, Redirect } from "react-router-dom";
 import { RouteComponentProps } from "react-router";
 import axios from "axios";
-import Pagination from "./pagination";
 import User from "../views/User";
 import Button from "./button";
-import { confirmAlert } from 'react-confirm-alert'; // Import
-import 'react-confirm-alert/src/react-confirm-alert.css';
+import { confirmAlert } from "react-confirm-alert"; // Import
+import ReactDOM from "react-dom";
+import Pagination from "react-js-pagination";
+import "react-confirm-alert/src/react-confirm-alert.css";
+// require("bootstrap/less/bootstrap.less");
 
 class Table extends React.Component<RouteComponentProps> {
-    constructor(props) {
-        super(props);
-        this.deleteMember = this.deleteMember.bind(this);
-        this.onChangePage = this.onChangePage.bind(this);
-        this.state = {
-            pageOfItems: [],
-            error: null
-        };
-    }
-    confirmDialog(id) {
-        confirmAlert({
-            customUI: ({ onClose }) => {
-                return (
-                    <div className='custom-ui'>
-                        <h1>Are you sure?</h1>
-                        <p>You want to delete this member?</p>
-                        <div className="react-confirm-alert-button-group">
-                            <button onClick={onClose}>Cancel</button>
-                            <button onClick={() => {
-                                this.deleteMember(id);
-                                onClose();
-                            }}>Confirm</button>
-                        </div>
-                    </div>
-                )
-            }
-        })
-    }
-    deleteMember(id) {
-        axios
-            .post("http://localhost:4000/delete/" + id)
-            .then()
-            .catch(err => console.log(err));
-    }
-    onChangePage(pageOfItems) {
-        // update state with new page of items
-        this.setState({ pageOfItems: pageOfItems });
-    }
-    editCustommer(id) {
-        this.props.history.push(`/user/${id}`);
-    }
-    renderTableData() {
-        return this.props.dataRes.map(item => {
-            return (
-                <tr>
-                    <td>{item.id}</td>
-                    <td>{item.name}</td>
-                    <td>{item.age}</td>
-                    <td>{item.email}</td>
-                    <td>{item.position}</td>
-                    <td>{item.phone}</td>
-                    <td>
-                        <Button onClick={() => this.editCustommer(item.id)} label={"Edit"} color={"secondary"} variant={"contained"}></Button>
-                    </td>
-                    <td>
-                        <Button onClick={() => this.confirmDialog(item.id)} label={"delete"} color={"primary"} variant={"contained"}></Button>
-                    </td>
-                </tr>
-            );
-        });
-    }
-    renderTableHeader() {
-        let header = this.props.tableHeader;
-        return header.map(items => {
-            return <th key={items}>{items.toUpperCase()}</th>;
-        });
-    }
+  constructor(props) {
+    super(props);
+    this.deleteMember = this.deleteMember.bind(this);
+    this.state = {
+      error: null,
+      activePage: 1
+    };
+  }
+  confirmDialog(id) {
+    confirmAlert({
+      customUI: ({ onClose }) => {
+        return (
+          <div className="custom-ui">
+            <h1>You want to delete this member {id}?</h1>
+            <div className="react-confirm-alert-button-group">
+              <button onClick={onClose}>Cancel</button>
+              <button
+                onClick={() => {
+                  this.deleteMember(id);
+                  onClose();
+                }}
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        );
+      }
+    });
+  }
+  deleteMember(id) {
+    axios
+      .post("http://localhost:4000/delete/" + id)
+      .then()
+      .catch(err => console.log(err));
+  }
+  editCustommer(id) {
+    this.props.history.push(`/user/${id}`);
+  }
 
-    render() {
-        const { error, dataRes } = this.state;
-        if (error) {
-            return <div>Error: {error.message}</div>;
-        } else {
-            return (
-                <div>
-                    <table id="students">
-                        <thead>
-                            <tr>{this.renderTableHeader()}</tr>
-                        </thead>
-                        <tbody>{this.renderTableData()}</tbody>
-                    </table>
-                    {/* <Pagination items={this.state.dataRes} onChangePage={this.onChangePage} /> */}
-                </div>
-            );
-        }
+  tableData() {
+    let table = [];
+
+    this.props.dataRes.map(item => {
+      let rows = [];
+      Object.values(item).map(value => {
+        rows.push(<td>{value}</td>);
+      });
+      if (this.props.isEdit) {
+        rows.push(
+          <td>
+            <Button
+              onClick={() => this.editCustommer(item.id)}
+              label={"Edit"}
+              color={"secondary"}
+              variant={"contained"}
+            ></Button>
+          </td>
+        );
+      }
+      if (this.props.isDelete) {
+        rows.push(
+          <td>
+            <Button
+              onClick={() => this.confirmDialog(item.id)}
+              label={"delete"}
+              color={"primary"}
+              variant={"contained"}
+            ></Button>
+          </td>
+        );
+      }
+      table.push(<tr>{rows}</tr>);
+    });
+    return table;
+  }
+
+  renderTableHeader() {
+    let header = this.props.tableHeader;
+    if (this.props.isEdit === true) {
+      header.push("edit");
     }
+    if (this.props.isDelete) {
+      header.push("delete");
+    }
+    return header.map((items, index) => {
+      return <th key={index}>{items.toUpperCase()}</th>;
+    });
+  }
+
+  handlePageChange(pageNumber) {
+    this.setState({ activePage: pageNumber });
+  }
+
+  render() {
+    return (
+      <div>
+        <table id="customer">
+          <thead>{this.renderTableHeader()}</thead>
+          <tbody>{this.tableData()}</tbody>
+        </table>
+        {/* <Pagination
+            activePage={this.state.activePage}
+            itemsCountPerPage={5}
+            totalItemsCount={this.props.dataRes.length}
+            pageRangeDisplayed={5}
+            onChange={() => this.handlePageChange}
+          /> */}
+      </div>
+    );
+  }
 }
 
 export default Table;
