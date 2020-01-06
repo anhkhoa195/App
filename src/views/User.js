@@ -1,6 +1,6 @@
 import React from "react";
 import axios from "axios";
-import { Form, Row, Col } from "react-bootstrap";
+import { Form } from "react-bootstrap";
 import Button from "../components/button";
 import "../styles/user.css";
 class User extends React.Component {
@@ -9,24 +9,23 @@ class User extends React.Component {
     let pathName = window.location.pathname.split("/");
     let isEditProduct = false;
     this.state = {
+      submitted: false,
       error: null,
+      response: {},
+      isEditProduct: true,
       id: pathName[2],
-      response: {}
-    };
-    this.initialState = {
-      id: "",
       name: "",
       age: "",
       email: "",
       position: "",
       phone: ""
     };
-
-    if (this.state.response) {
-      this.isEditProduct = true;
+    if (this.state.id) {
+      this.state.isEditProduct = true;
     } else {
-      this.state = this.initialState;
+      this.state.isEditProduct = false;
     }
+
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.onFormSubmit = this.onFormSubmit.bind(this);
@@ -34,9 +33,7 @@ class User extends React.Component {
 
   onFormSubmit(data) {
     let apiUrl;
-    console.log(this.isEditProduct);
-
-    if (this.isEditProduct) {
+    if (this.state.isEditProduct) {
       apiUrl = `http://localhost:4000/editProduct/${this.state.id}`;
     } else {
       apiUrl = "http://localhost:4000/createProduct";
@@ -57,16 +54,25 @@ class User extends React.Component {
   handleChange(event) {
     const name = event.target.name;
     const value = event.target.value;
-    console.log(value);
-
     this.setState({
       [name]: value
     });
   }
 
-  handleSubmit(event) {
+  async handleSubmit(event) {
+    let data = {
+      id: this.state.id,
+      name: this.state.name,
+      age: this.state.age,
+      email: this.state.email,
+      position: this.state.position,
+      phone: this.state.phone
+    };
+    await this.setState({ submitted: true });
+    console.log(this.state.submitted);
+
     event.preventDefault();
-    this.onFormSubmit(this.state.response);
+    this.onFormSubmit(data);
   }
 
   componentWillMount() {
@@ -79,6 +85,14 @@ class User extends React.Component {
             this.setState({
               response: res.data[0]
             });
+            this.setState({
+              id: this.state.response.id,
+              name: this.state.response.name,
+              age: this.state.response.age,
+              email: this.state.response.email,
+              position: this.state.response.position,
+              phone: this.state.response.phone
+            });
           },
           error => {
             this.setState({ error });
@@ -86,81 +100,140 @@ class User extends React.Component {
         )
         .catch(err => console.log(err));
     }
-    this.state = this.state.response;
   }
+
   render() {
     return (
       <div className="App">
-        <h2>Customer</h2>
-        <Row>
-          <Col>
-            <Form className="form-over">
-              <Form.Group controlId="id">
-                <Form.Label>ID</Form.Label>
-                <Form.Control
-                  type="text"
-                  name="id"
-                  value={this.state.id}
-                  onChange={this.handleChange}
-                  placeholder="ID"
-                />
-              </Form.Group>
-              <Form.Group controlId="name">
-                <Form.Label>Name</Form.Label>
-                <Form.Control
-                  type="text"
-                  name="name"
-                  value={this.state.name}
-                  onChange={this.handleChange}
-                  placeholder="Name"
-                />
-              </Form.Group>
-              <Form.Group controlId="age">
-                <Form.Label>Age</Form.Label>
-                <Form.Control
-                  type="text"
-                  name="age"
-                  value={this.state.age}
-                  onChange={this.handleChange}
-                  placeholder="Age"
-                />
-              </Form.Group>
-              <Form.Group controlId="email">
-                <Form.Label>Email</Form.Label>
-                <Form.Control
-                  type="text"
-                  name="email"
-                  value={this.state.email}
-                  onChange={this.handleChange}
-                  placeholder="Email"
-                />
-              </Form.Group>
-              <Form.Group controlId="position">
-                <Form.Label>Position</Form.Label>
-                <Form.Control
-                  type="text"
-                  name="position"
-                  value={this.state.position}
-                  onChange={this.handleChange}
-                  placeholder="Position"
-                />
-              </Form.Group>
-              <Form.Group controlId="phone">
-                <Form.Label>Phone</Form.Label>
-                <Form.Control
-                  type="text"
-                  name="phone"
-                  value={this.state.phone}
-                  onChange={this.handleChange}
-                  placeholder="Phone"
-                />
-              </Form.Group>
-              <Form.Group>
-                <Button variant="contained" onClick={this.handleSubmit} label={"Save"} color={"primary"} />
-              </Form.Group>
-            </Form>
-          </Col>
-        </Row>
+        <h2>
+          {this.state.isEditProduct === true
+            ? "Edit Customer"
+            : "Create Customer"}
+        </h2>
+        <form className="form-over">
+          <div
+            className={
+              "form-group row" +
+              (this.state.submitted && !this.state.id ? " is-invalid" : "")
+            }
+          >
+            <label className="form-label">ID: </label>
+            <input
+              type="text"
+              className={
+                "form-control" +
+                (this.state.submitted && !this.state.id ? " is-invalid" : "")
+              }
+              name="id"
+              value={this.state.id}
+              onChange={this.handleChange}
+              placeholder="ID"
+            />
+
+            {this.state.submitted && !this.state.id && (
+              <div className="help-block">Username is required</div>
+            )}
+          </div>
+          <div className="form-group row">
+            <label className="form-label">Name: </label>
+            <input
+              type="text"
+              className={
+                "form-control" +
+                (this.state.submitted && !this.state.name ? " is-invalid" : "")
+              }
+              name="name"
+              value={this.state.name}
+              defaultValue={this.state.response.name}
+              onChange={this.handleChange}
+              placeholder="ID"
+            />
+            {this.state.submitted && !this.state.name && (
+              <div className="help-block">Name is required</div>
+            )}
+          </div>
+          <div className="form-group row">
+            <label className="form-label">Age: </label>
+            <input
+              type="text"
+              className={
+                "form-control" +
+                (this.state.submitted && !this.state.age ? " is-invalid" : "")
+              }
+              name="age"
+              value={this.state.age}
+              onChange={this.handleChange}
+              placeholder="Age"
+            />
+
+            {this.state.submitted && !this.state.age && (
+              <div className="help-block">Age is required</div>
+            )}
+          </div>
+          <div className="form-group row">
+            <label className="form-label">Email: </label>
+            <input
+              type="text"
+              className={
+                "form-control" +
+                (this.state.submitted && !this.state.email ? " is-invalid" : "")
+              }
+              name="email"
+              value={this.state.email}
+              onChange={this.handleChange}
+              placeholder="Email"
+            />
+
+            {this.state.submitted && !this.state.email && (
+              <div className="help-block">Email is required</div>
+            )}
+          </div>
+          <div className="form-group row">
+            <label className="form-label">Position: </label>
+            <input
+              type="text"
+              className={
+                "form-control" +
+                (this.state.submitted && !this.state.position
+                  ? " is-invalid"
+                  : "")
+              }
+              name="position"
+              value={this.state.position}
+              onChange={this.handleChange}
+              placeholder="Position"
+            />
+
+            {this.state.submitted && !this.state.position && (
+              <div className="help-block">Position is required</div>
+            )}
+          </div>
+          <div className="form-group row">
+            <label className="form-label">Phone: </label>
+            <input
+              type="text"
+              className={
+                "form-control" +
+                (this.state.submitted && !this.state.phone ? " is-invalid" : "")
+              }
+              name="phone"
+              value={this.state.phone}
+              onChange={this.handleChange}
+              placeholder="Phone"
+            />
+
+            {this.state.submitted && !this.state.phone && (
+              <div className="help-block">Phone is required</div>
+            )}
+          </div>
+          <Button
+            className="saveBtn"
+            variant="contained"
+            onClick={this.handleSubmit}
+            label={"Save"}
+            color={"primary"}
+          />
+        </form>
       </div>
     );
   }

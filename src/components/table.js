@@ -1,15 +1,16 @@
 import React, { Component } from "react";
 import "../styles/table.css";
-import { BrowserRouter, Link, Switch, Route, Redirect } from "react-router-dom";
 import { RouteComponentProps } from "react-router";
 import axios from "axios";
-import User from "../views/User";
 import Button from "./button";
 import { confirmAlert } from "react-confirm-alert"; // Import
-import ReactDOM from "react-dom";
-import Pagination from "react-js-pagination";
 import "react-confirm-alert/src/react-confirm-alert.css";
-// require("bootstrap/less/bootstrap.less");
+import { CONSTANTS } from "../constants/index";
+import Select from "rc-select";
+import Pagination from "rc-pagination";
+import localeInfo from "rc-pagination/lib/locale/en_US";
+import "rc-pagination/assets/index.css";
+import "rc-select/assets/index.css";
 
 class Table extends React.Component<RouteComponentProps> {
   constructor(props) {
@@ -17,15 +18,22 @@ class Table extends React.Component<RouteComponentProps> {
     this.deleteMember = this.deleteMember.bind(this);
     this.state = {
       error: null,
-      activePage: 1
+      activePage: 1,
+      totalPages: null,
+      pageSizeOptions: CONSTANTS.PER_PAGE_ITEMS,
+      pageAble: this.props.pageAble,
+      itemPages: 10
     };
+    this.onChange = this.onChange.bind(this);
+    this.onShowSizeChange = this.onShowSizeChange.bind(this);
+    this.updateData = this.updateData.bind(this);
   }
-  confirmDialog(id) {
+  confirmDialog(id, name) {
     confirmAlert({
       customUI: ({ onClose }) => {
         return (
           <div className="custom-ui">
-            <h1>You want to delete this member {id}?</h1>
+            <h1>You want to delete this id: {name}?</h1>
             <div className="react-confirm-alert-button-group">
               <button onClick={onClose}>Cancel</button>
               <button
@@ -54,7 +62,6 @@ class Table extends React.Component<RouteComponentProps> {
 
   tableData() {
     let table = [];
-
     this.props.dataRes.map(item => {
       let rows = [];
       Object.values(item).map(value => {
@@ -76,7 +83,7 @@ class Table extends React.Component<RouteComponentProps> {
         rows.push(
           <td>
             <Button
-              onClick={() => this.confirmDialog(item.id)}
+              onClick={() => this.confirmDialog(item.id, item.name)}
               label={"delete"}
               color={"primary"}
               variant={"contained"}
@@ -84,6 +91,7 @@ class Table extends React.Component<RouteComponentProps> {
           </td>
         );
       }
+
       table.push(<tr>{rows}</tr>);
     });
     return table;
@@ -91,35 +99,67 @@ class Table extends React.Component<RouteComponentProps> {
 
   renderTableHeader() {
     let header = this.props.tableHeader;
-    if (this.props.isEdit === true) {
-      header.push("edit");
-    }
-    if (this.props.isDelete) {
-      header.push("delete");
-    }
+
     return header.map((items, index) => {
       return <th key={index}>{items.toUpperCase()}</th>;
     });
   }
 
-  handlePageChange(pageNumber) {
-    this.setState({ activePage: pageNumber });
+  onShowSizeChange(current, pageSize) {
+    this.updateData(current, pageSize);
+    this.setState({ itemPages: pageSize });
+    this.setState({ activePage: 1 });
   }
 
+  onChange(current, pageSize) {
+    this.updateData(current, pageSize);
+    this.setState({ itemPages: pageSize });
+    this.setState({ activePage: current });
+  }
+  updateData(page, totalPages) {
+    this.props.parentCallback(page + "," + totalPages);
+  }
   render() {
+    this.state.totalPages = Math.ceil(
+      this.props.dataRes.length / this.state.itemPages
+    );
     return (
-      <div>
+      <div className="table">
         <table id="customer">
-          <thead>{this.renderTableHeader()}</thead>
+          <thead>
+            <tr>{this.renderTableHeader()}</tr>
+          </thead>
           <tbody>{this.tableData()}</tbody>
         </table>
-        {/* <Pagination
-            activePage={this.state.activePage}
-            itemsCountPerPage={5}
-            totalItemsCount={this.props.dataRes.length}
-            pageRangeDisplayed={5}
-            onChange={() => this.handlePageChange}
-          /> */}
+        <div className="row pagination">
+          <div>
+            {this.state.activePage && (
+              <span className="current-page d-inline-block h-100 pl-4 text-secondary">
+                Page{" "}
+                <span className="font-weight-bold">
+                  {this.state.activePage}
+                </span>{" "}
+                /{" "}
+                <span className="font-weight-bold">
+                  {this.state.totalPages}
+                </span>
+              </span>
+            )}
+          </div>
+          <div className="d-flex flex-row paginate">
+            <Pagination
+              selectComponentClass={Select}
+              showSizeChanger
+              pageSizeOptions={this.state.pageSizeOptions}
+              defaultPageSize={this.state.itemPages}
+              defaultCurrent={this.state.activePage}
+              onShowSizeChange={this.onShowSizeChange}
+              onChange={this.onChange}
+              total={this.props.dataRes.length}
+              locale={localeInfo}
+            />
+          </div>
+        </div>
       </div>
     );
   }
